@@ -14,13 +14,6 @@
    limitations under the License.
 */
 
-
-/*
- * bfi.c - Brainfuck Interpreter
- * Author: Jacob Wiltse
- * I am creating this as a fun and simple project.
- */
-
 // STD Libraries
 #include <stdio.h>
 #include <stdlib.h>
@@ -80,10 +73,10 @@ int main(int argc, char** argv){
     static char usage[] = "usage: %s -f filename [-m memsize]\n";
     extern char *optarg;
     char * filename, input, insize;
-    int c, fd, fflag = 0, err = 0, memsize = 20;
+    int c, fd, fflag = 0, err = 0, memsize = 20, debug = 0;
     // Initialize the loop stack with a size of 10
     init_stack(10);
-    while ((c = getopt(argc, argv, "m:f:")) != -1)
+    while ((c = getopt(argc, argv, "m:f:d")) != -1)
         switch(c){
             case 'f':
                 filename = optarg;
@@ -91,6 +84,9 @@ int main(int argc, char** argv){
                 break;
             case 'm':
                 memsize = atoi(optarg);
+                break;
+            case 'd':
+                debug = 1;
                 break;
             default:
                 //error state
@@ -119,6 +115,8 @@ int main(int argc, char** argv){
 
 
     while((insize = read(fd,&input,1)) > 0){
+        if(debug)
+            printf("input: %c\n", input);
         switch(input){
             case '>':
                 ++mem;
@@ -140,11 +138,19 @@ int main(int argc, char** argv){
                 break;
             case '[':
                 if(*mem == 0) {
-                    while(input != ']')
+                    int depth = 0;
+                    while(input != ']'){
                         // TODO: error handling
-                        read(fd,&input,1);
-                    if(lseek(fd,1,SEEK_CUR) == -1){
-                        fprintf(stderr,"Cannot seek: %s", strerror(errno));
+                        if(read(fd,&input,1) == -1){
+                            fprintf(stderr, "Cannot read file: %s", strerror(errno));
+                            exit(1);
+                        }
+                        if(input == '[')
+                            depth++;
+                        if(input == ']' && depth > 0){
+                            input = ' ';
+                            depth--;
+                        }
                     }
                 } else {
                     off_t offset;
