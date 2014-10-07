@@ -5,13 +5,13 @@
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 // STD Libraries
@@ -114,7 +114,8 @@ int main(int argc, char** argv){
     long file_size = lseek(fd, 0, SEEK_CUR);
     lseek(fd, 0, SEEK_SET);
 
-    printf("file_size: %d\n", file_size);
+    if(debug)
+        printf("file_size: %d\n", file_size);
 
     char * program = malloc(sizeof(char) * file_size);
     int read_in;
@@ -157,11 +158,6 @@ int main(int argc, char** argv){
                 if(*mem == 0) {
                     int depth = 0;
                     while(input != ']'){
-                        // TODO: error handling
-                        /*if(read(fd,&input,1) == -1){
-                            fprintf(stderr, "Cannot read file: %s", strerror(errno));
-                            exit(1);
-                        }*/
                         input = program[pos];
                         pos++;
                         if(input == '[')
@@ -172,23 +168,13 @@ int main(int argc, char** argv){
                         }
                     }
                 } else {
-                    /*off_t offset;
-                    if((offset = lseek(fd, 0, SEEK_CUR)) == -1){
-                        fprintf(stderr,"Cannot seek: %s", strerror(errno));
-                        exit(1);
-                    }*/
                     push_stack(pos);
-                    //push_stack(offset);
                 }
                 break;
             case ']':
                 if(*mem != 0){
                     long last_pos = pop_stack();
                     push_stack(last_pos);
-                    /*if(lseek(fd,last_pos,SEEK_SET) == -1){
-                        fprintf(stderr,"Cannot seek: %s", strerror(errno));
-                        exit(1);
-                    }*/
                     pos = last_pos;
                 } else pop_stack();
                 break;
