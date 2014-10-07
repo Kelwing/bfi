@@ -72,7 +72,7 @@ void free_stack(){
 int main(int argc, char** argv){
     static char usage[] = "usage: %s -f filename [-m memsize]\n";
     extern char *optarg;
-    char * filename, input, insize;
+    char * filename, insize;
     int c, fd, fflag = 0, err = 0, memsize = 1024, debug = 0;
     // Initialize the loop stack with a size of 10
     init_stack(50);
@@ -110,11 +110,28 @@ int main(int argc, char** argv){
         exit(1);
     }
 
+    lseek(fd, 0, SEEK_END);
+    long file_size = lseek(fd, 0, SEEK_CUR);
+    lseek(fd, 0, SEEK_SET);
+
+    printf("file_size: %d\n", file_size);
+
+    char * program = malloc(sizeof(char) * file_size);
+    int read_in;
+    if((read_in = read(fd, program, file_size)) < 0){
+        fprintf(stderr, "Could not read in program: %s", strerror(errno));
+        exit(1);
+    }
+
     printf("Brainfuck Interpreter by Jacob Wiltse\n");
     printf("Memory Size: %d\n\n", memsize);
 
-
-    while((insize = read(fd,&input,1)) > 0){
+    long pos = 0;
+    char input;
+    while(pos < file_size){
+        //printf("in loop");
+        input = program[pos];
+        pos++;
         if(debug)
             printf("input: %c\n", input);
         switch(input){
@@ -141,10 +158,12 @@ int main(int argc, char** argv){
                     int depth = 0;
                     while(input != ']'){
                         // TODO: error handling
-                        if(read(fd,&input,1) == -1){
+                        /*if(read(fd,&input,1) == -1){
                             fprintf(stderr, "Cannot read file: %s", strerror(errno));
                             exit(1);
-                        }
+                        }*/
+                        input = program[pos];
+                        pos++;
                         if(input == '[')
                             depth++;
                         if(input == ']' && depth > 0){
@@ -153,22 +172,24 @@ int main(int argc, char** argv){
                         }
                     }
                 } else {
-                    off_t offset;
+                    /*off_t offset;
                     if((offset = lseek(fd, 0, SEEK_CUR)) == -1){
                         fprintf(stderr,"Cannot seek: %s", strerror(errno));
                         exit(1);
-                    }
-                    push_stack(offset);
+                    }*/
+                    push_stack(pos);
+                    //push_stack(offset);
                 }
                 break;
             case ']':
                 if(*mem != 0){
-                    off_t last_pos = pop_stack();
+                    long last_pos = pop_stack();
                     push_stack(last_pos);
-                    if(lseek(fd,last_pos,SEEK_SET) == -1){
+                    /*if(lseek(fd,last_pos,SEEK_SET) == -1){
                         fprintf(stderr,"Cannot seek: %s", strerror(errno));
                         exit(1);
-                    }
+                    }*/
+                    pos = last_pos;
                 } else pop_stack();
                 break;
             default:
@@ -182,5 +203,6 @@ int main(int argc, char** argv){
         exit(1);
     }
     free_stack();
+    free(program);
     return 0;
 }
