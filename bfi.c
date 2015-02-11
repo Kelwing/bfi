@@ -74,7 +74,7 @@ int main(int argc, char** argv){
     extern char *optarg;
     char * filename, insize;
     int c, fd, fflag = 0, err = 0, memsize = 1024, debug = 0;
-    // Initialize the loop stack with a size of 10
+    // Initialize the loop stack with a default size of 50
     init_stack(50);
     while ((c = getopt(argc, argv, "m:f:d")) != -1)
         switch(c){
